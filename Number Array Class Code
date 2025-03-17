@@ -1,0 +1,130 @@
+// NumberArray.h
+#ifndef NUMBERARRAY_H
+#define NUMBERARRAY_H
+
+#include <iostream>
+#include <iomanip>
+#include <random>
+
+class NumberArray {
+private:
+    static const int MAX_SIZE = 10;
+    static const double DEFAULT_VALUE;
+    int size;
+    double* array;
+
+public:
+    NumberArray(int size = MAX_SIZE);
+    ~NumberArray();
+    
+    void setNumber(int index, double value);
+    double getNumber(int index) const;
+    double getMin() const;
+    double getMax() const;
+    double getAverage() const;
+    void print() const;
+};
+
+#endif
+
+// NumberArray.cpp
+#include "NumberArray.h"
+
+const double NumberArray::DEFAULT_VALUE = 10000.0;
+
+NumberArray::NumberArray(int size) {
+    this->size = (size > 0) ? size : MAX_SIZE;
+    array = new double[this->size]();
+    std::cout << "Array of size " << this->size << " created.\n";
+}
+
+NumberArray::~NumberArray() {
+    delete[] array;
+    std::cout << "The destructor is running\n";
+}
+
+void NumberArray::setNumber(int index, double value) {
+    if (index >= 0 && index < size) {
+        array[index] = value;
+    } else {
+        std::cout << "The index is out of bounds, number not stored\n";
+    }
+}
+
+double NumberArray::getNumber(int index) const {
+    if (index >= 0 && index < size) {
+        return array[index];
+    } else {
+        std::cout << "The index is out of bounds, returning default\n";
+        return DEFAULT_VALUE;
+    }
+}
+
+double NumberArray::getMin() const {
+    double minVal = array[0];
+    for (int i = 1; i < size; i++) {
+        if (array[i] < minVal) {
+            minVal = array[i];
+        }
+    }
+    return minVal;
+}
+
+double NumberArray::getMax() const {
+    double maxVal = array[0];
+    for (int i = 1; i < size; i++) {
+        if (array[i] > maxVal) {
+            maxVal = array[i];
+        }
+    }
+    return maxVal;
+}
+
+double NumberArray::getAverage() const {
+    double sum = 0;
+    for (int i = 0; i < size; i++) {
+        sum += array[i];
+    }
+    return sum / size;
+}
+
+void NumberArray::print() const {
+    for (int i = 0; i < size; i++) {
+        std::cout << std::fixed << std::setprecision(1) << array[i] << " ";
+    }
+    std::cout << "\n";
+}
+
+// main.cpp
+#include "NumberArray.h"
+
+int main() {
+    std::cout << "----- Test constructors -----\n";
+    NumberArray defaultArray;
+    defaultArray.print();
+
+    NumberArray customArray(15);
+    customArray.print();
+
+    std::cout << "----- Test mutator -----\n";
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(1.0, 100.0);
+    
+    for (int i = 0; i < 15; i++) {
+        customArray.setNumber(i, dis(gen));
+    }
+    customArray.print();
+    
+    std::cout << "Trying to set a number with an out-of-bounds index (20):\n";
+    customArray.setNumber(20, 50.0);
+    
+    std::cout << "----- Test accessors -----\n";
+    std::cout << "Access item at index 5: " << customArray.getNumber(5) << "\n";
+    std::cout << "Access item at index 20 (out of bounds): " << customArray.getNumber(20) << "\n";
+    std::cout << "The minimum value in the array is: " << customArray.getMin() << "\n";
+    std::cout << "The maximum value in the array is: " << customArray.getMax() << "\n";
+    std::cout << "The average of the values in the array is: " << customArray.getAverage() << "\n";
+    
+    return 0;
+}
