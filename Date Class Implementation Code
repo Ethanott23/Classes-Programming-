@@ -1,0 +1,95 @@
+#include <iostream>
+#include <string>
+#include <array>
+#include <cmath>
+
+class Date {
+private:
+    int day, month, year;
+    static const std::array<std::string, 12> monthNames;
+
+    bool isLeapYear(int y) const {
+        return (y % 4 == 0 && y % 100 != 0) || (y % 400 == 0);
+    }
+
+    int lastDayOfMonth(int m, int y) const {
+        static const int daysInMonth[12] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
+        if (m == 2 && isLeapYear(y)) return 29;
+        return daysInMonth[m - 1];
+    }
+
+    int toDays() const {
+        int days = day;
+        for (int y = 1; y < year; ++y) days += isLeapYear(y) ? 366 : 365;
+        for (int m = 1; m < month; ++m) days += lastDayOfMonth(m, year);
+        return days;
+    }
+
+public:
+    Date(int m = 1, int d = 1, int y = 1900) { setDate(m, d, y); }
+
+    void setDate(int m, int d, int y) {
+        if (y < 1 || m < 1 || m > 12 || d < 1 || d > lastDayOfMonth(m, y)) {
+            std::cout << "Invalid date, setting to default 1/1/1900.\n";
+            day = 1; month = 1; year = 1900;
+        } else {
+            day = d; month = m; year = y;
+        }
+    }
+
+    friend std::ostream& operator<<(std::ostream& out, const Date& date) {
+        out << monthNames[date.month - 1] << " " << date.day << ", " << date.year;
+        return out;
+    }
+
+    friend std::istream& operator>>(std::istream& in, Date& date) {
+        int m, d, y;
+        std::cout << "Enter date (MM DD YYYY): ";
+        in >> m >> d >> y;
+        date.setDate(m, d, y);
+        return in;
+    }
+
+    Date& operator++() { // Pre-increment
+        if (++day > lastDayOfMonth(month, year)) {
+            day = 1;
+            if (++month > 12) {
+                month = 1;
+                ++year;
+            }
+        }
+        return *this;
+    }
+
+    Date operator++(int) { // Post-increment
+        Date temp = *this;
+        ++(*this);
+        return temp;
+    }
+
+    Date& operator--() { // Pre-decrement
+        if (--day < 1) {
+            if (--month < 1) {
+                month = 12;
+                --year;
+            }
+            day = lastDayOfMonth(month, year);
+        }
+        return *this;
+    }
+
+    Date operator--(int) { // Post-decrement
+        Date temp = *this;
+        --(*this);
+        return temp;
+    }
+
+    int operator-(const Date& rhs) const {
+        return std::abs(this->toDays() - rhs.toDays());
+    }
+};
+
+const std::array<std::string, 12> Date::monthNames = {
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+};
