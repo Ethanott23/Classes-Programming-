@@ -1,0 +1,206 @@
+#include <iostream>
+#include <string>
+#include <iomanip>
+#include <cmath>
+using namespace std;
+
+class Date {
+private:
+    int month, day, year;
+    static const string monthNames[12];
+
+    bool isLeapYear(int y) const {
+        return (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0));
+    }
+
+    int lastDay(int m, int y) const {
+        if (m == 2) return isLeapYear(y) ? 29 : 28;
+        else if (m == 4 || m == 6 || m == 9 || m == 11) return 30;
+        else return 31;
+    }
+
+    int toDays() const {
+        int d = day;
+        for (int y = 1; y < year; ++y) d += isLeapYear(y) ? 366 : 365;
+        for (int m = 1; m < month; ++m) d += lastDay(m, year);
+        return d;
+    }
+
+    void normalize() {
+        if (!isValid(month, day, year)) {
+            month = 1; day = 1; year = 1900;
+        }
+    }
+
+    bool isValid(int m, int d, int y) const {
+        if (m < 1 || m > 12 || d < 1 || y < 1) return false;
+        return d <= lastDay(m, y);
+    }
+
+public:
+    Date(int m = 1, int d = 1, int y = 1900) : month(m), day(d), year(y) {
+        normalize();
+    }
+
+    void setDate(int m, int d, int y) {
+        if (isValid(m, d, y)) {
+            month = m; day = d; year = y;
+        } else {
+            cout << "Invalid date, setting to default.\n";
+            month = 1; day = 1; year = 1900;
+        }
+    }
+
+    void printNumeric() const {
+        cout << month << "/" << day << "/" << year << endl;
+    }
+
+    void printLong() const {
+        cout << monthNames[month - 1] << " " << day << ", " << year << endl;
+    }
+
+    void printEuropean() const {
+        cout << day << " " << monthNames[month - 1] << " " << year << endl;
+    }
+
+    Date operator++() {
+        if (day < lastDay(month, year)) ++day;
+        else {
+            day = 1;
+            if (month == 12) {
+                month = 1;
+                ++year;
+            } else {
+                ++month;
+            }
+        }
+        return *this;
+    }
+
+    Date operator++(int) {
+        Date temp = *this;
+        ++(*this);
+        return temp;
+    }
+
+    Date operator--() {
+        if (day > 1) --day;
+        else {
+            if (month == 1) {
+                --year;
+                month = 12;
+            } else {
+                --month;
+            }
+            day = lastDay(month, year);
+        }
+        return *this;
+    }
+
+    Date operator--(int) {
+        Date temp = *this;
+        --(*this);
+        return temp;
+    }
+
+    int operator-(const Date& other) const {
+        return abs(toDays() - other.toDays());
+    }
+
+    friend ostream& operator<<(ostream& out, const Date& d) {
+        out << monthNames[d.month - 1] << " " << d.day << ", " << d.year;
+        return out;
+    }
+
+    friend istream& operator>>(istream& in, Date& d) {
+        int m, dy, y;
+        cout << "Enter month (1-12): "; in >> m;
+        cout << "Enter day: "; in >> dy;
+        cout << "Enter year: "; in >> y;
+        d.setDate(m, dy, y);
+        return in;
+    }
+};
+
+const string Date::monthNames[12] = {
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+};
+
+int main() {
+    cout << "1. Default constructor: ";
+    Date d1;
+    d1.printNumeric();
+
+    cout << "2. Constructor with parameters: ";
+    Date d2(4, 18, 2014);
+    d2.printLong();
+
+    cout << "3. Test setDate(): ";
+    d1.setDate(5, 10, 2020);
+    d1.printEuropean();
+
+    cout << "4. Invalid date (13/45/2018): ";
+    d1.setDate(13, 45, 2018);
+    d1.printNumeric();
+
+    cout << "5. Invalid date (4/31/2000): ";
+    d1.setDate(4, 31, 2000);
+    d1.printNumeric();
+
+    cout << "6. Invalid leap date (2/29/2009): ";
+    d1.setDate(2, 29, 2009);
+    d1.printNumeric();
+
+    cout << "7. Date difference (4/18/2014 - 4/10/2014): ";
+    d1.setDate(4, 10, 2014);
+    d2.setDate(4, 18, 2014);
+    cout << (d2 - d1) << " days\n";
+
+    cout << "8. Date difference (2/2/2006 - 11/10/2003): ";
+    d1.setDate(2, 2, 2006);
+    d2.setDate(11, 10, 2003);
+    cout << (d1 - d2) << " days\n";
+
+    cout << "9. Decrement 2/29/2008 -> ";
+    d1.setDate(2, 29, 2008);
+    --d1;
+    d1.printNumeric();
+
+    cout << "10. Increment -> ";
+    ++d1;
+    d1.printNumeric();
+
+    cout << "11. Post-decrement -> ";
+    d1--;
+    d1.printNumeric();
+
+    cout << "Post-increment -> ";
+    d1++;
+    d1.printNumeric();
+
+    cout << "12. Post-increment from 12/31/2024 -> ";
+    d1.setDate(12, 31, 2024);
+    d1++;
+    d1.printNumeric();
+
+    cout << "13. Post-decrement -> ";
+    d1--;
+    d1.printNumeric();
+
+    cout << "14. Pre-increment -> ";
+    ++d1;
+    d1.printNumeric();
+
+    cout << "Pre-decrement -> ";
+    --d1;
+    d1.printNumeric();
+
+    cout << "15. Input date: \n";
+    cin >> d1;
+
+    cout << "16. Output date: \n";
+    cout << d1 << endl;
+
+    return 0;
+}
